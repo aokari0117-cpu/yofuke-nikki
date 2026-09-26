@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>よふけ日記</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #12142A;
+    --navy-deep: #0B0C1C;
+    --paper: #FBF6EA;
+    --paper-line: #E6DFC9;
+    --amber: #E7A94B;
+    --amber-soft: #C98A3A;
+    --ink: #F2EFE6;
+    --ink-dim: #9296B8;
+    --ink-faint: #5C6087;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  body {
+    margin: 0;
+    height: 100%;
+    background: var(--navy);
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(231,169,75,0.10), transparent 55%),
+      radial-gradient(ellipse at 90% 0%, rgba(90,100,170,0.14), transparent 50%);
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .stars span {
+    position: absolute; width: 2px; height: 2px; background: var(--ink-dim);
+    border-radius: 50%; opacity: 0.5;
+  }
+
+  header {
+    padding: 22px 20px 14px;
+    padding-top: calc(22px + env(safe-area-inset-top, 0px));
+    position: relative; z-index: 1;
+  }
+  header .brand {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+  header .brand .dot { color: var(--amber); }
+  header .sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+
+  main {
+    flex: 1;
+    position: relative; z-index: 1;
+    padding: 4px 20px 100px;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ---- Write / status card ---- */
+  .moon-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 22px;
+    padding: 28px 22px;
+    margin-top: 14px;
+  }
+  .moon-icon { font-size: 30px; line-height: 1; margin-bottom: 14px; }
+  .status-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 0 8px;
+  }
+  .status-body {
+    font-size: 14px;
+    color: var(--ink-dim);
+    line-height: 1.75;
+    margin: 0 0 18px;
+  }
+  .countdown {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.02em;
+  }
+  .countdown .label { font-size: 12px; font-family: 'Zen Kaku Gothic New', sans-serif; color: var(--ink-faint); font-weight: 400; }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--paper);
+    color: #2B2718;
+    border: none;
+    border-radius: 14px;
+    padding: 18px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    line-height: 1.9;
+    resize: vertical;
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--paper-line);
+  }
+  textarea::placeholder { color: #A79F7E; }
+  textarea:focus { box-shadow: inset 0 0 0 2px var(--amber-soft); }
+
+  .char-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px; font-size: 12px; color: var(--ink-faint);
+  }
+
+  .btn {
+    appearance: none; border: none; cursor: pointer;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700; font-size: 15px;
+    border-radius: 999px;
+    padding: 14px 20px;
+    width: 100%;
+    margin-top: 16px;
+    background: var(--amber);
+    color: #241705;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { background: rgba(255,255,255,0.08); color: var(--ink-faint); cursor: not-allowed; }
+
+  .done-badge {
+    display: inline-block; margin-top: 4px;
+    font-size: 12px; color: var(--amber);
+    background: rgba(231,169,75,0.12);
+    border: 1px solid rgba(231,169,75,0.3);
+    padding: 5px 12px; border-radius: 999px;
+  }
+
+  /* ---- Feed ---- */
+  .feed-date {
+    font-size: 12px; letter-spacing: 0.04em; color: var(--ink-faint);
+    margin: 22px 4px 10px;
+  }
+  .entry {
+    background: var(--paper);
+    color: #2B2718;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+    position: relative;
+    transform: rotate(var(--tilt, 0deg));
+  }
+  .entry:nth-child(odd) { --tilt: -0.6deg; }
+  .entry:nth-child(even) { --tilt: 0.5deg; }
+  .entry.me { box-shadow: 0 10px 26px rgba(231,169,75,0.22), 0 0 0 1.5px var(--amber-soft); }
+  .entry-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #241705;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+  .entry-name { font-weight: 700; font-size: 14px; color: #2B2718; }
+  .entry-time { font-size: 11px; color: #8A8260; margin-left: auto; }
+  .entry-text {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15.5px; line-height: 1.85;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  .empty {
+    text-align: center; padding: 60px 20px; color: var(--ink-faint);
+  }
+  .empty .e-icon { font-size: 28px; margin-bottom: 10px; }
+  .empty p { font-size: 13.5px; line-height: 1.8; margin: 0; }
+
+  /* ---- Tab bar ---- */
+  nav.tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(11,12,28,0.86);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    z-index: 5;
+  }
+  nav.tabbar button {
+    flex: 1; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 12px 0 10px;
+    color: var(--ink-faint);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11.5px;
+  }
+  nav.tabbar button .ic { font-size: 19px; }
+  nav.tabbar button.active { color: var(--amber); }
+
+  @media (max-width: 380px) {
+    .status-title { font-size: 18px; }
+    .countdown { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<header>
+  <div class="brand">よふけ<span class="dot">・</span>日記</div>
+  <div class="sub">今夜の言葉は、明日みんなに届く</div>
+</header>
+
+<main>
+  <div id="write-view"></div>
+  <div id="feed-view" style="display:none"></div>
+</main>
+
+<nav class="tabbar">
+  <button id="tab-write" class="active"><span class="ic">🌙</span>書く</button>
+  <button id="tab-feed"><span class="ic">☀️</span>みんなの昨日</button>
+</nav>
+
+<script>
+(function(){
+  // ---------- window config ----------
+  // 夜の書く時間: 21:00〜23:59。それ以外の時間は執筆できない。
+  const WINDOW_START = 21; // 21:00
+  const WINDOW_END = 24;   // 24:00 (=翌0:00)
+
+  const todayKey = () => {
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  };
+  const yesterdayKey = () => {
+    const d = new Date(); d.setDate(d.getDate()-1);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  };
+  const fmtLabel = (key) => {
+    const [y,m,d] = key.split('-').map(Number);
+    return `${m}月${d}日`;
+  };
+
+  let store = { entries: {} };
+  try {
+    const raw = localStorage.getItem('yofuke-nikki');
+    if (raw) store = JSON.parse(raw);
+  } catch(e) {}
+  function save() {
+    try { localStorage.setItem('yofuke-nikki', JSON.stringify(store)); } catch(e) {}
+  }
+
+  // ---------- mock friends (fixed "yesterday" entries for demo) ----------
+  const FRIENDS = [
+    { name: '陽菜', color: '#E7A94B', time: '23:12', text: 'バイトの帰り、コンビニの前で猫に呼び止められた。10分くらい喋りかけてしまった。向こうは無視だったけど。' },
+    { name: '蓮', color: '#8FA9E0', time: '22:47', text: '課題が終わらなくて一人で焦っていたら、グループチャットで同じ状況の人がいて少し安心した。明日は早起きする(たぶん)。' },
+    { name: 'ゆい', color: '#D98A8A', time: '21:58', text: '母に電話したら30分も話してしまった。特に用事もなかったのに、なんだか元気が出た夜。' },
+  ];
+
+  function seedYesterday() {
+    const yk = yesterdayKey();
+    if (!store.entries[yk]) store.entries[yk] = {};
+    if (!store.entries[yk].__friends_seeded) {
+      store.entries[yk].__friends_seeded = true;
+      store.entries[yk].friends = FRIENDS;
+      save();
+    }
+  }
+  seedYesterday();
+
+  function inWindow() {
+    const h = new Date().getHours() + new Date().getMinutes()/60;
+    return h >= WINDOW_START && h < WINDOW_END;
+  }
+  function msUntil(hour) {
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hour, 0, 0, 0);
+    if (target <= now) target.setDate(target.getDate()+1);
+    return target - now;
+  }
+  function fmtDur(ms) {
+    const totalSec = Math.max(0, Math.floor(ms/1000));
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    return { h, m, s };
+  }
+
+  // ---------- render: write view ----------
+  const writeView = document.getElementById('write-view');
+  const tk = todayKey();
+
+  function getMyEntryToday() {
+    return (store.entries[tk] && store.entries[tk].me) || null;
+  }
+
+  function renderWrite() {
+    const already = getMyEntryToday();
+    const open = inWindow();
+
+    if (open && !already) {
+      writeView.innerHTML = `
+        <div class="moon-card">
+          <div class="moon-icon">🌙</div>
+          <p class="status-title">今夜の日記を書こう</p>
+          <p class="status-body">書けるのは 24:00 まで。書き終えた言葉は、明日の朝みんなに届きます。</p>
+          <textarea id="ta" placeholder="今日あったこと、思ったこと、誰かに話したいこと…" maxlength="600"></textarea>
+          <div class="char-row"><span id="cc">0 / 600</span><span id="tleft"></span></div>
+          <button class="btn" id="submit" disabled>今日の一日を書き終える</button>
+        </div>
+      `;
+      const ta = document.getElementById('ta');
+      const cc = document.getElementById('cc');
+      const btn = document.getElementById('submit');
+      ta.addEventListener('input', () => {
+        cc.textContent = ta.value.length + ' / 600';
+        btn.disabled = ta.value.trim().length === 0;
+      });
+      btn.addEventListener('click', () => {
+        const text = ta.value.trim();
+        if (!text) return;
+        if (!store.entries[tk]) store.entries[tk] = {};
+        store.entries[tk].me = { text, time: new Date().toTimeString().slice(0,5) };
+        save();
+        renderWrite();
+      });
+      tickCountdown('tleft', WINDOW_END, '書ける時間 残り');
+    } else if (open && already) {
+      writeView.innerHTML = `
+        <div class="moon-card">
+          <div class="moon-icon">🖋️</div>
+          <p class="status-title">今夜はもう書き終えたね</p>
+          <p class="status-body">お疲れさま。あとは夜が更けるのを待つだけ。明日の朝、みんなの日記と一緒に読めるようになります。</p>
+          <span class="done-badge">${already.time} に記入済み</span>
+        </div>
+      `;
+    } else if (!open && already) {
+      writeView.innerHTML = `
+        <div class="moon-card">
+          <div class="moon-icon">✨</div>
+          <p class="status-title">今日の分は書き終わっているよ</p>
+          <p class="status-body">明日の夜、また新しい一日を書きに来てね。</p>
+          <div class="countdown" id="cd"></div>
+        </div>
+      `;
+      tickCountdown('cd', WINDOW_START, '次に書けるまで');
+    } else {
+      writeView.innerHTML = `
+        <div class="moon-card">
+          <div class="moon-icon">☁️</div>
+          <p class="status-title">まだ日記の時間じゃない</p>
+          <p class="status-body">書けるのは夜 ${WINDOW_START}:00〜24:00 のあいだだけ。それまでは今日の出来事をゆっくり眺めておこう。</p>
+          <div class="countdown" id="cd"></div>
+        </div>
+      `;
+      tickCountdown('cd', WINDOW_START, '書けるようになるまで');
+    }
+  }
+
+  let countdownTimer = null;
+  function tickCountdown(elId, targetHour, labelText) {
+    if (countdownTimer) clearInterval(countdownTimer);
+    const el = document.getElementById(elId);
+    if (!el) return;
+    function update() {
+      const target = document.getElementById(elId);
+      if (!target) { clearInterval(countdownTimer); return; }
+      const { h, m, s } = fmtDur(msUntil(targetHour));
+      if (elId === 'tleft') {
+        target.textContent = `残り ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      } else {
+        target.innerHTML = `${String(h).padStart(2,'0')}<span class="label">時間</span> ${String(m).padStart(2,'0')}<span class="label">分</span> <span class="label">${labelText}</span>`;
+      }
+    }
+    update();
+    countdownTimer = setInterval(update, 1000);
+  }
+
+  // ---------- render: feed view ----------
+  const feedView = document.getElementById('feed-view');
+  function initials(name) { return name.slice(0,1); }
+
+  function renderFeed() {
+    const yk = yesterdayKey();
+    const yEntries = store.entries[yk];
+    const rows = [];
+    if (yEntries && yEntries.me) {
+      rows.push({ name: 'あなた', time: yEntries.me.time, text: yEntries.me.text, me: true, color: 'var(--amber)' });
+    }
+    if (yEntries && yEntries.friends) {
+      yEntries.friends.forEach(f => rows.push(f));
+    }
+
+    if (rows.length === 0) {
+      feedView.innerHTML = `
+        <div class="empty">
+          <div class="e-icon">🌤️</div>
+          <p>昨日の日記はまだありません。<br>夜になったら、今日の分を書いてみよう。</p>
+        </div>
+      `;
+      return;
+    }
+
+    feedView.innerHTML = `
+      <div class="feed-date">${fmtLabel(yk)}の記録 · ${rows.length}件</div>
+      ${rows.map(r => `
+        <div class="entry ${r.me ? 'me' : ''}">
+          <div class="entry-head">
+            <div class="avatar" style="background:${r.color}">${initials(r.name)}</div>
+            <div class="entry-name">${r.name}</div>
+            <div class="entry-time">${r.time}</div>
+          </div>
+          <div class="entry-text">${r.text.replace(/</g,'&lt;')}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  // ---------- tabs ----------
+  const tabWrite = document.getElementById('tab-write');
+  const tabFeed = document.getElementById('tab-feed');
+  tabWrite.addEventListener('click', () => {
+    tabWrite.classList.add('active'); tabFeed.classList.remove('active');
+    writeView.style.display = ''; feedView.style.display = 'none';
+  });
+  tabFeed.addEventListener('click', () => {
+    tabFeed.classList.add('active'); tabWrite.classList.remove('active');
+    feedView.style.display = ''; writeView.style.display = 'none';
+    renderFeed();
+  });
+
+  // ---------- stars bg ----------
+  const starsEl = document.getElementById('stars');
+  for (let i=0;i<28;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*60+'%';
+    s.style.opacity = (0.15+Math.random()*0.5).toFixed(2);
+    starsEl.appendChild(s);
+  }
+
+  renderWrite();
+})();
+</script>
+</body>
+</html>
